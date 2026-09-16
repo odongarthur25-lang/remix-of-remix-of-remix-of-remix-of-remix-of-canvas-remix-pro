@@ -34,17 +34,41 @@ export default function AgentPage() {
     const unsubs = paths.map(([path, type]) =>
       onValue(dbRef(database, path), (snap) => {
         const data = snap.val() || {};
-        store[path] = Object.entries(data)
-          .filter(([, v]: [string, any]) => v?.isAgentOnly === true)
-          .map(([id, v]: [string, any]) => ({
-            id,
-            type,
-            title: v?.title || "Untitled",
-            image: v?.image,
-            year: v?.year,
-            rating: v?.rating,
-            episodes: v?.episodes,
-          }));
+        const entries = Object.entries(data) as Array<[string, any]>;
+        if (type === "series") {
+          store[path] = entries
+            .map(([id, v]) => {
+              const raw = v?.episodes;
+              const arr: any[] = Array.isArray(raw)
+                ? raw
+                : raw && typeof raw === "object"
+                ? Object.values(raw)
+                : [];
+              const agentEps = arr.filter((e: any) => e && e.isAgentOnly === true);
+              return {
+                id,
+                type,
+                title: v?.title || "Untitled",
+                image: v?.image,
+                year: v?.year,
+                rating: v?.rating,
+                episodes: agentEps,
+              } as AgentItem;
+            })
+            .filter((s) => (s.episodes as any[]).length > 0);
+        } else {
+          store[path] = entries
+            .filter(([, v]) => v?.isAgentOnly === true)
+            .map(([id, v]) => ({
+              id,
+              type,
+              title: v?.title || "Untitled",
+              image: v?.image,
+              year: v?.year,
+              rating: v?.rating,
+              episodes: v?.episodes,
+            }));
+        }
         setItems([...(store.movies || []), ...(store.series || [])]);
       })
     );
