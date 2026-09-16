@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { database } from "@/lib/firebase";
 import { ref as dbRef, get, onValue } from "firebase/database";
 import { Card } from "@/components/ui/card";
-import { Shield, Film, Tv, Music, Image, Users, BarChart3, Wallet, Activity, ArrowLeft, TrendingUp, Navigation, Globe, Home, Star, Search, Eye, Sparkles } from "lucide-react";
+import { Shield, Film, Tv, Music, Image, Users, BarChart3, Wallet, Activity, ArrowLeft, TrendingUp, Navigation, Globe, Home, Star, Search, Eye, Sparkles, Server } from "lucide-react";
 import AdminPasswordGate from "@/components/AdminPasswordGate";
 import AdminChangePassword from "@/components/AdminChangePassword";
 
