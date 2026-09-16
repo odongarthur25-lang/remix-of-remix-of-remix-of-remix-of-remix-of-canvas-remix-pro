@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 interface Item {
-  id: string;
-  path: "movies" | "series";
+  key: string;
+  refPath: string;
+  kind: "movie" | "episode";
   title: string;
+  subtitle: string;
   image?: string;
-  year?: number;
-  category?: string;
   isAgentOnly?: boolean;
 }
 
@@ -31,24 +31,55 @@ export default function AdminAgentContentPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    const paths: Item["path"][] = ["movies", "series"];
     const store: Record<string, Item[]> = {};
-    const unsubs = paths.map((path) =>
-      onValue(dbRef(database, path), (snap) => {
-        const data = snap.val() || {};
-        store[path] = Object.entries(data).map(([id, v]: [string, any]) => ({
-          id,
-          path,
-          title: v?.title || "Untitled",
-          image: v?.image,
-          year: v?.year,
-          category: v?.category,
-          isAgentOnly: v?.isAgentOnly === true,
-        }));
-        setItems([...(store.movies || []), ...(store.series || [])]);
-      })
-    );
-    return () => unsubs.forEach((u) => u());
+
+    const unsubMovies = onValue(dbRef(database, "movies"), (snap) => {
+      const data = snap.val() || {};
+      store.movies = Object.entries(data).map(([id, v]: [string, any]) => ({
+        key: `movie-${id}`,
+        refPath: `movies/${id}`,
+        kind: "movie" as const,
+        title: v?.title || "Untitled",
+        subtitle: ["Movie", v?.category, v?.year].filter(Boolean).join(" · "),
+        image: v?.image,
+        isAgentOnly: v?.isAgentOnly === true,
+      }));
+      setItems([...(store.movies || []), ...(store.series || [])]);
+    });
+
+    const unsubSeries = onValue(dbRef(database, "series"), (snap) => {
+      const data = snap.val() || {};
+      const list: Item[] = [];
+      Object.entries(data).forEach(([id, v]: [string, any]) => {
+        const raw = v?.episodes;
+        const entries: Array<[string, any]> = Array.isArray(raw)
+          ? raw.map((e, i) => [String(i), e])
+          : raw && typeof raw === "object"
+          ? Object.entries(raw)
+          : [];
+        entries.forEach(([epKey, ep], i) => {
+          if (!ep) return;
+          const season = Number(ep?.season || 1);
+          const num = Number(ep?.episodeNumber ?? i + 1);
+          list.push({
+            key: `ep-${id}-${epKey}`,
+            refPath: `series/${id}/episodes/${epKey}`,
+            kind: "episode",
+            title: `${v?.title || "Untitled"} — S${season} EP${num}`,
+            subtitle: ["Episode", ep?.title].filter(Boolean).join(" · "),
+            image: v?.image,
+            isAgentOnly: ep?.isAgentOnly === true,
+          });
+        });
+      });
+      store.series = list;
+      setItems([...(store.movies || []), ...(store.series || [])]);
+    });
+
+    return () => {
+      unsubMovies();
+      unsubSeries();
+    };
   }, [isAdmin]);
 
   const flash = (m: string) => {
@@ -58,8 +89,8 @@ export default function AdminAgentContentPage() {
 
   const setAgentOnly = async (item: Item, value: boolean) => {
     try {
-      await update(dbRef(database, `${item.path}/${item.id}`), { isAgentOnly: value });
-      flash(value ? `"${item.title}" moved to the Agent plan.` : `"${item.title}" released to all plans.`);
+      await update(dbRef(database, item.refPath), { isAgentOnly: value });
+      flash(value ? `"${item.title}" moved to the Agent Zone.` : `"${item.title}" released to all plans.`);
     } catch (e) {
       console.error(e);
       flash("Could not update. Please try again.");
@@ -88,8 +119,8 @@ export default function AdminAgentContentPage() {
         )}
 
         <p className="text-muted-foreground text-sm mb-4">
-          Titles in the Agent Zone are only visible to Agent-plan subscribers. Release a title to move it to the normal
-          plans, where everyone with an active subscription can watch it. Currently in the Agent Zone: {agentCount}.
+          Movies are marked as a whole, while series are marked episode by episode — only the episodes you pick appear in
+          the Agent Zone. Currently in the Agent Zone: {agentCount}.
         </p>
 
         <div className="flex flex-wrap gap-2 mb-4">
@@ -114,15 +145,11 @@ export default function AdminAgentContentPage() {
 
         <div className="space-y-2">
           {visible.map((item) => (
-            <Card key={`${item.path}-${item.id}`} className="flex items-center gap-3 p-3 bg-card border-border">
+            <Card key={item.key} className="flex items-center gap-3 p-3 bg-card border-border">
               <img src={item.image || "/placeholder.svg"} alt={item.title} className="w-12 h-12 rounded object-cover" />
               <div className="flex-1 min-w-0">
                 <p className="text-foreground text-sm font-medium truncate">{item.title}</p>
-                <p className="text-muted-foreground text-xs">
-                  {item.path === "movies" ? "Movie" : "Series"}
-                  {item.category ? ` · ${item.category}` : ""}
-                  {item.year ? ` · ${item.year}` : ""}
-                </p>
+                <p className="text-muted-foreground text-xs truncate">{item.subtitle}</p>
               </div>
               {item.isAgentOnly ? (
                 <>
