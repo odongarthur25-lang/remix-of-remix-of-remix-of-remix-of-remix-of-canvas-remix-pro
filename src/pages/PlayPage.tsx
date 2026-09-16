@@ -360,9 +360,13 @@ export default function PlayPage() {
                       ? "bg-primary text-primary-foreground"
                       : "bg-secondary hover:bg-muted text-foreground border border-border"
                   }`}
-                  title={ep.title}
+                  title={ep.isAgentOnly && !canWatchAgent ? `${ep.title} — Agent only` : ep.title}
                 >
-                  <span className="text-[9px] font-bold leading-none">{ep.episodeNumber}</span>
+                  {ep.isAgentOnly && !canWatchAgent ? (
+                    <Lock className="w-2.5 h-2.5" />
+                  ) : (
+                    <span className="text-[9px] font-bold leading-none">{ep.episodeNumber}</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -443,9 +447,13 @@ export default function PlayPage() {
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card hover:border-primary/50 text-foreground"
                   }`}
-                  title={ep.title}
+                  title={ep.isAgentOnly && !canWatchAgent ? `${ep.title} — Agent only` : ep.title}
                 >
-                  <span className="text-[9px] font-bold leading-none">{ep.episodeNumber}</span>
+                  {ep.isAgentOnly && !canWatchAgent ? (
+                    <Lock className="w-2.5 h-2.5" />
+                  ) : (
+                    <span className="text-[9px] font-bold leading-none">{ep.episodeNumber}</span>
+                  )}
                 </button>
               ))}
             </div>
