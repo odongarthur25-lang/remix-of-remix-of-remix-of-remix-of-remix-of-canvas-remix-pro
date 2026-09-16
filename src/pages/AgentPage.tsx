@@ -90,7 +90,7 @@ export default function AgentPage() {
         number: Number(e?.episodeNumber ?? i + 1),
         title: e?.title || `Episode ${i + 1}`,
         season: Number(e?.season || 1),
-        image: e?.image || item.image,
+        image: item.image,
       }))
       .sort((a, b) => a.season - b.season || a.number - b.number);
   };
