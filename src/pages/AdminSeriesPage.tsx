@@ -14,6 +14,7 @@ interface Episode {
   streamlink: string;
   season?: number;
   image?: string;
+  isAgentOnly?: boolean;
 }
 
 interface Series {
@@ -163,7 +164,7 @@ export default function AdminSeriesPage() {
         rating: Number(newSeries.rating), year: newSeries.year,
         category: newSeries.category, seasons: newSeries.seasons,
         episodes: newSeries.episodes, isRecentlyAdded: newSeries.isRecentlyAdded, isCompleted: newSeries.isCompleted,
-        isAgentOnly: newSeries.isAgentOnly,
+        isAgentOnly: false,
         ...(editingSeries ? { updatedAt: new Date().toISOString() } : { createdAt: new Date().toISOString() }),
       };
 
@@ -260,10 +261,7 @@ export default function AdminSeriesPage() {
                 <input type="checkbox" checked={newSeries.isRecentlyAdded} onChange={(e) => setNewSeries({ ...newSeries, isRecentlyAdded: e.target.checked })} className="w-4 h-4 accent-primary" />
                 Recently Added
               </label>
-              <label className="flex items-center gap-2 text-sm text-amber-400 font-semibold cursor-pointer">
-                <input type="checkbox" checked={newSeries.isAgentOnly} onChange={(e) => setNewSeries({ ...newSeries, isAgentOnly: e.target.checked })} className="w-4 h-4 accent-amber-400" />
-                Agent only (Agent Zone)
-              </label>
+              <span className="text-xs text-amber-400/80">Agent Zone is set per episode below.</span>
             </div>
             </div>
 
@@ -337,9 +335,19 @@ export default function AdminSeriesPage() {
                           <label className="block text-[10px] text-muted-foreground mb-1">Stream Link</label>
                           <Input value={ep.streamlink} onChange={(e) => updateEpisode(globalIdx, 'streamlink', e.target.value)} className="bg-secondary border-border text-foreground text-xs h-8" />
                         </div>
-                        <div className="col-span-3">
+                        <div className="col-span-2">
                           <label className="block text-[10px] text-muted-foreground mb-1">Episode Poster URL</label>
                           <Input value={ep.image || ""} onChange={(e) => updateEpisode(globalIdx, 'image', e.target.value)} className="bg-secondary border-border text-foreground text-xs h-8" placeholder="optional" />
+                        </div>
+                        <div className="col-span-1">
+                          <label className="block text-[10px] text-amber-400 mb-1">Agent</label>
+                          <input
+                            type="checkbox"
+                            checked={ep.isAgentOnly === true}
+                            onChange={(e) => updateEpisode(globalIdx, 'isAgentOnly', e.target.checked)}
+                            className="w-4 h-4 accent-amber-400 mb-2"
+                            title="Agent only episode"
+                          />
                         </div>
                         <div className="col-span-1">
                           <Button type="button" size="sm" variant="destructive" onClick={() => handleRemoveEpisode(globalIdx)} className="h-8 w-8 p-0">
@@ -395,7 +403,7 @@ export default function AdminSeriesPage() {
                   setNewSeries({
                     title: s.title, image: s.image, rating: s.rating, year: s.year,
                     category: s.category, seasons: s.seasons || 1,
-                    episodes: (s.episodes || []).map(ep => ({ ...ep, season: ep.season || 1, image: ep.image || "" })),
+                    episodes: (s.episodes || []).map(ep => ({ ...ep, season: ep.season || 1, image: ep.image || "", isAgentOnly: ep.isAgentOnly === true })),
                     isRecentlyAdded: s.isRecentlyAdded || false,
                     isCompleted: s.isCompleted || false,
                     isAgentOnly: s.isAgentOnly || false,
