@@ -373,7 +373,7 @@ export default function PlayPage() {
       {/* Action buttons below player */}
       <div className="px-4 py-3 border-b border-border">
         <div className="flex items-center gap-3">
-          {streamUrl && (
+          {streamUrl && !episodeLocked && (
             <button
               onClick={handleDownload}
               disabled={downloading}
