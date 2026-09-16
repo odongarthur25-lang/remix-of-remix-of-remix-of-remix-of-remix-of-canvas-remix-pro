@@ -24,6 +24,7 @@ import AdminActivityPage from "./pages/AdminActivityPage";
 import AdminAgentsPage from "./pages/AdminAgentsPage";
 import AdminPlansPage from "./pages/AdminPlansPage";
 import AdminAgentContentPage from "./pages/AdminAgentContentPage";
+import AdminPaymentBackendPage from "./pages/AdminPaymentBackendPage";
 import AgentPage from "./pages/AgentPage";
 import RouteTracker from "./components/RouteTracker";
 import PhoneNumberGate from "./components/PhoneNumberGate";
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="/admin/agents" element={<AdminAgentsPage />} />
               <Route path="/admin/plans" element={<AdminPlansPage />} />
               <Route path="/admin/agent-content" element={<AdminAgentContentPage />} />
+              <Route path="/admin/payment-backend" element={<AdminPaymentBackendPage />} />
               <Route path="/agent" element={<AgentPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
