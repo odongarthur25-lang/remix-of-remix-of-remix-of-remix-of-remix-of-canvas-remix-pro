@@ -4,7 +4,7 @@ import { database } from "@/lib/firebase";
 import { ref, get } from "firebase/database";
 import { useAuth } from "@/lib/auth-context";
 import { useSubscription } from "@/lib/subscription-context";
-import { Star, Download, Share2, ArrowLeft, Play, Loader2, X } from "lucide-react";
+import { Star, Download, Share2, ArrowLeft, Play, Loader2, X, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { canDownload, recordDownload, getLimitInfo } from "@/lib/download-limits";
 
@@ -13,6 +13,7 @@ interface Episode {
   title: string;
   streamlink: string;
   season?: number;
+  isAgentOnly?: boolean;
 }
 
 interface ContentData {
@@ -48,7 +49,7 @@ export default function PlayPage() {
   const type = searchParams.get("type") || "movie";
   const epNum = searchParams.get("ep");
   const { user, isAdmin } = useAuth();
-  const { hasActiveSubscription, currentPlanId, subscription } = useSubscription();
+  const { hasActiveSubscription, currentPlanId, subscription, isAgentSubscriber } = useSubscription();
 
   const [content, setContent] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,6 +78,7 @@ export default function PlayPage() {
                 title: ep.title || `Episode ${(ep.episodeNumber != null) ? ep.episodeNumber : (i + 1)}`,
                 streamlink: ep.streamlink || ep.streamLink || ep.link || "",
                 season: ep.season ? Number(ep.season) : 1,
+                isAgentOnly: ep.isAgentOnly === true,
               }));
             } else {
               episodes = Object.entries(raw.episodes).map(([key, ep]: [string, any]) => ({
@@ -84,6 +86,7 @@ export default function PlayPage() {
                 title: ep.title || `Episode ${(ep.episodeNumber != null) ? ep.episodeNumber : key}`,
                 streamlink: ep.streamlink || ep.streamLink || ep.link || "",
                 season: ep.season ? Number(ep.season) : 1,
+                isAgentOnly: ep.isAgentOnly === true,
               }));
             }
           }
@@ -258,6 +261,12 @@ export default function PlayPage() {
     ? content.episodes!.filter((ep) => (ep.season || 1) === currentSeason)
     : [];
 
+  const activeEpisode = isSeries
+    ? content.episodes!.find((e) => e.episodeNumber === currentEpisode && (e.season || 1) === currentSeason)
+    : undefined;
+  const canWatchAgent = isAdmin || isAgentSubscriber;
+  const episodeLocked = !!activeEpisode?.isAgentOnly && !canWatchAgent;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Back button */}
@@ -273,7 +282,21 @@ export default function PlayPage() {
       <div className={`${isSeries ? "md:flex" : ""}`}>
         {/* Video Player */}
         <div className={`${isSeries ? "md:flex-1" : "w-full"}`}>
-          {streamUrl && (
+          {episodeLocked ? (
+            <div className="relative w-full bg-card flex flex-col items-center justify-center text-center gap-3 px-6" style={{ aspectRatio: "16/9", maxHeight: "70vh" }}>
+              <Lock className="w-10 h-10 text-primary" />
+              <h2 className="text-foreground font-bold text-base">Agent Zone episode</h2>
+              <p className="text-muted-foreground text-sm max-w-sm">
+                Episode {currentEpisode} of {content.title} is only available to Agent subscribers.
+              </p>
+              <button
+                onClick={() => navigate("/subscribe")}
+                className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition"
+              >
+                Get Agent access
+              </button>
+            </div>
+          ) : streamUrl && (
             <div className="relative w-full bg-background" style={{ aspectRatio: "16/9", maxHeight: "70vh" }}>
               <iframe
                 src={getEmbedUrl(streamUrl)}
@@ -337,9 +360,13 @@ export default function PlayPage() {
                       ? "bg-primary text-primary-foreground"
                       : "bg-secondary hover:bg-muted text-foreground border border-border"
                   }`}
-                  title={ep.title}
+                  title={ep.isAgentOnly && !canWatchAgent ? `${ep.title} — Agent only` : ep.title}
                 >
-                  <span className="text-[9px] font-bold leading-none">{ep.episodeNumber}</span>
+                  {ep.isAgentOnly && !canWatchAgent ? (
+                    <Lock className="w-2.5 h-2.5" />
+                  ) : (
+                    <span className="text-[9px] font-bold leading-none">{ep.episodeNumber}</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -350,7 +377,7 @@ export default function PlayPage() {
       {/* Action buttons below player */}
       <div className="px-4 py-3 border-b border-border">
         <div className="flex items-center gap-3">
-          {streamUrl && (
+          {streamUrl && !episodeLocked && (
             <button
               onClick={handleDownload}
               disabled={downloading}
@@ -420,9 +447,13 @@ export default function PlayPage() {
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-card hover:border-primary/50 text-foreground"
                   }`}
-                  title={ep.title}
+                  title={ep.isAgentOnly && !canWatchAgent ? `${ep.title} — Agent only` : ep.title}
                 >
-                  <span className="text-[9px] font-bold leading-none">{ep.episodeNumber}</span>
+                  {ep.isAgentOnly && !canWatchAgent ? (
+                    <Lock className="w-2.5 h-2.5" />
+                  ) : (
+                    <span className="text-[9px] font-bold leading-none">{ep.episodeNumber}</span>
+                  )}
                 </button>
               ))}
             </div>
