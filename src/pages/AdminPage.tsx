@@ -141,6 +141,7 @@ export default function AdminPage() {
     { label: "Agents", icon: Sparkles, href: "/admin/agents", desc: "Agent of the Week submissions" },
     { label: "Plans & Pricing", icon: Wallet, href: "/admin/plans", desc: "Change plan prices and durations" },
     { label: "Agent Zone", icon: Sparkles, href: "/admin/agent-content", desc: "Move titles between Agent and normal plans" },
+    { label: "Payment Backend", icon: Server, href: "/admin/payment-backend", desc: "Change where payments are processed" },
   ];
 
   return (
