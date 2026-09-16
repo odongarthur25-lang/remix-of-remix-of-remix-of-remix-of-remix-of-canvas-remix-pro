@@ -13,6 +13,7 @@ interface Episode {
   title: string;
   streamlink: string;
   season?: number;
+  isAgentOnly?: boolean;
 }
 
 interface ContentData {
@@ -48,7 +49,7 @@ export default function PlayPage() {
   const type = searchParams.get("type") || "movie";
   const epNum = searchParams.get("ep");
   const { user, isAdmin } = useAuth();
-  const { hasActiveSubscription, currentPlanId, subscription } = useSubscription();
+  const { hasActiveSubscription, currentPlanId, subscription, isAgentSubscriber } = useSubscription();
 
   const [content, setContent] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,6 +78,7 @@ export default function PlayPage() {
                 title: ep.title || `Episode ${(ep.episodeNumber != null) ? ep.episodeNumber : (i + 1)}`,
                 streamlink: ep.streamlink || ep.streamLink || ep.link || "",
                 season: ep.season ? Number(ep.season) : 1,
+                isAgentOnly: ep.isAgentOnly === true,
               }));
             } else {
               episodes = Object.entries(raw.episodes).map(([key, ep]: [string, any]) => ({
@@ -84,6 +86,7 @@ export default function PlayPage() {
                 title: ep.title || `Episode ${(ep.episodeNumber != null) ? ep.episodeNumber : key}`,
                 streamlink: ep.streamlink || ep.streamLink || ep.link || "",
                 season: ep.season ? Number(ep.season) : 1,
+                isAgentOnly: ep.isAgentOnly === true,
               }));
             }
           }
