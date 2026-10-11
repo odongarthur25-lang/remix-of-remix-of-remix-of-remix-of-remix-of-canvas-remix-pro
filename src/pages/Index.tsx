@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
@@ -23,7 +23,22 @@ const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  // Firebase restores returning sessions automatically; visitors who are
+  // signed out get the login pop-up once per visit so they can sign back in.
+  const [autoAuthPrompted, setAutoAuthPrompted] = useState(false);
+  useEffect(() => {
+    if (loading || autoAuthPrompted) return;
+    setAutoAuthPrompted(true);
+    if (user) return;
+    let alreadyPrompted = true;
+    try { alreadyPrompted = sessionStorage.getItem("auth_prompt_shown") === "1"; } catch {}
+    if (!alreadyPrompted) {
+      setShowAuthModal(true);
+      try { sessionStorage.setItem("auth_prompt_shown", "1"); } catch {}
+    }
+  }, [loading, user, autoAuthPrompted]);
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
