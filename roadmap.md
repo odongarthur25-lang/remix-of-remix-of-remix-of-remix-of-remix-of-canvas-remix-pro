@@ -1,0 +1,5 @@
+- [ ] Match desktop and mobile catalog layouts with light/dark controls; retain Agent Zone and compact wisdom.
+- [ ] Restore valid returning login sessions without bypassing explicit sign-out.
+- [ ] Link notification pop-ups and bell entries to titles and specific episodes.
+- [ ] Open watch pages for everyone and lock playback until subscription activation; test access rules.
+- [ ] Verify interactions and apply required package update.
