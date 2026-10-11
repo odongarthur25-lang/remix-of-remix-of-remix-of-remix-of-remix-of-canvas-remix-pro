@@ -50,6 +50,8 @@ export default function PlayPage() {
   const epNum = searchParams.get("ep");
   const { user, isAdmin } = useAuth();
   const { hasActiveSubscription, currentPlanId, subscription, isAgentSubscriber } = useSubscription();
+  // Everyone can open the watch page; playback stays locked until activation
+  const playbackLocked = !user || (!hasActiveSubscription && !isAdmin);
 
   const [content, setContent] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,8 +62,6 @@ export default function PlayPage() {
   const [related, setRelated] = useState<RelatedItem[]>([]);
 
   useEffect(() => {
-    if (!user) { navigate("/login"); return; }
-    if (!hasActiveSubscription && !isAdmin) { navigate("/subscribe"); return; }
 
     const fetchContent = async () => {
       try {
@@ -103,7 +103,7 @@ export default function PlayPage() {
     };
 
     fetchContent();
-  }, [id, type, user, hasActiveSubscription, isAdmin, navigate]);
+  }, [id, type, user?.uid, navigate]);
 
   const fetchRelated = async (currentContent: ContentData) => {
     try {
@@ -157,6 +157,7 @@ export default function PlayPage() {
   }
 
   const getStreamUrl = () => {
+    if (playbackLocked) return "";
     if (type === "series" && content.episodes?.length) {
       const ep = content.episodes.find(
         (e) => e.episodeNumber === currentEpisode && (e.season || 1) === currentSeason
@@ -282,7 +283,23 @@ export default function PlayPage() {
       <div className={`${isSeries ? "md:flex" : ""}`}>
         {/* Video Player */}
         <div className={`${isSeries ? "md:flex-1" : "w-full"}`}>
-          {episodeLocked ? (
+          {playbackLocked ? (
+            <div className="relative w-full bg-card flex flex-col items-center justify-center text-center gap-3 px-6" style={{ aspectRatio: "16/9", maxHeight: "70vh" }}>
+              <Lock className="w-10 h-10 text-primary" />
+              <h2 className="text-foreground font-bold text-base">{user ? "Subscription required" : "Sign in to watch"}</h2>
+              <p className="text-muted-foreground text-sm max-w-sm">
+                {user
+                  ? `Activate a subscription to unlock ${content.title} and start watching.`
+                  : `Sign in or create an account to watch ${content.title}.`}
+              </p>
+              <button
+                onClick={() => navigate(user ? "/subscribe" : "/login")}
+                className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition"
+              >
+                {user ? "Choose a plan" : "Sign in / Sign up"}
+              </button>
+            </div>
+          ) : episodeLocked ? (
             <div className="relative w-full bg-card flex flex-col items-center justify-center text-center gap-3 px-6" style={{ aspectRatio: "16/9", maxHeight: "70vh" }}>
               <Lock className="w-10 h-10 text-primary" />
               <h2 className="text-foreground font-bold text-base">Agent Zone episode</h2>
@@ -377,7 +394,7 @@ export default function PlayPage() {
       {/* Action buttons below player */}
       <div className="px-4 py-3 border-b border-border">
         <div className="flex items-center gap-3">
-          {streamUrl && !episodeLocked && (
+          {streamUrl && (
             <button
               onClick={handleDownload}
               disabled={downloading}
