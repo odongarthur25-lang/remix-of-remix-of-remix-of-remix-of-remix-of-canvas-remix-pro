@@ -1,17 +1,22 @@
 import { useState } from "react";
-import { Search, User, LogOut, Download, X } from "lucide-react";
+import { Search, User, LogOut, Download, Sun, Moon } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/use-theme";
 import NotificationBell from "./NotificationBell";
 
 interface TopHeaderProps {
+  onFilterChange?: (filter: string) => void;
+  activeFilter?: string;
   onSearch?: (query: string) => void;
 }
 
-export default function TopHeader({ onSearch }: TopHeaderProps) {
+export default function TopHeader({ onSearch, onFilterChange, activeFilter }: TopHeaderProps) {
+  const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,28 +38,26 @@ export default function TopHeader({ onSearch }: TopHeaderProps) {
   };
 
   return (
-    <header className="fixed top-0 left-0 md:left-[72px] right-0 h-14 z-30 flex items-center px-3 md:px-5 gap-3"
-      style={{
-        background: "hsl(var(--background) / 0.8)",
-        backdropFilter: "blur(20px) saturate(180%)",
-        WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        borderBottom: "1px solid hsl(var(--border) / 0.5)",
-      }}
+    <header className="fixed top-0 left-0 md:left-[72px] right-0 h-14 z-30 grid grid-cols-[minmax(0,1fr)_auto] sm:flex items-center px-3 md:px-5 gap-2 bg-card border-b border-border"
+
     >
       {/* Logo */}
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex min-w-0 items-center gap-2 shrink-0">
         <img
           src="https://i.postimg.cc/Fs2nssw-m/logo.png"
           alt="LUO CINEMA"
           className="w-8 h-8 drop-shadow-md"
         />
-        <span className="font-extrabold text-sm gradient-text hidden sm:block tracking-tight font-display">
-          LUO CINEMA ✝️
+        <span className="font-extrabold text-sm text-foreground truncate font-display">
+          DIMPOZ MOVIES
         </span>
       </div>
 
+      {onFilterChange && <nav className="hidden lg:flex items-center gap-1 shrink-0" aria-label="Catalog">
+        {[["movies", "Movies"], ["series", "TV Shows"], ["anime", "Anime"]].map(([filter, label]) => <Button key={filter} variant="ghost" size="sm" className={activeFilter === filter ? "text-primary" : "text-foreground"} onClick={() => onFilterChange(filter)}>{label}</Button>)}
+      </nav>}
       {/* Search */}
-      <form onSubmit={handleSearch} className="flex-1 max-w-md mx-auto">
+      <form onSubmit={handleSearch} className="hidden sm:block min-w-0 flex-1 max-w-xs ml-auto">
         <div className="relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
@@ -69,14 +72,16 @@ export default function TopHeader({ onSearch }: TopHeaderProps) {
 
       {/* Actions */}
       <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+        <Button variant="ghost" size="icon" className="h-8 w-8 sm:hidden" aria-label="Search" onClick={() => navigate("/search")}><Search /></Button>
         <NotificationBell />
-        <button
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"}>{theme === "dark" ? <Sun /> : <Moon />}</Button>
+        {canInstall && <Button
           onClick={() => install()}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-accent/90 hover:bg-accent text-accent-foreground rounded-xl text-[11px] font-semibold transition-all shadow-sm hover:shadow-md"
         >
           <Download className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Install</span>
-        </button>
+        </Button>}
 
         {user ? (
           <div className="relative">
