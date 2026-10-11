@@ -210,14 +210,6 @@ export default function PopularGrid({
   const handlePosterClick = (movie: Movie) => {
     // Track a "check" for every poster tap so trending reflects real interest
     runTransaction(ref(database, `content_views/${movie.id}`), (cur) => (typeof cur === "number" ? cur : 0) + 1).catch(() => {});
-    if (!user) {
-      onRequireAuth?.();
-      return;
-    }
-    if (!hasActiveSubscription && !isAdmin) {
-      onShowSubscription();
-      return;
-    }
     const type = movie.type || "movie";
     if (type === "series" && movie.episodes?.length) {
       navigate(`/play/${movie.id}?type=series&ep=1`);
@@ -275,7 +267,7 @@ export default function PopularGrid({
     if (activeFilter === "anime") return "Anime";
     if (activeFilter === "music") return "Music";
     if (activeFilter === "top-rated") return "Top Rated";
-    return "Popular on LUO CINEMA";
+    return "Popular on DIMPOZ MOVIES";
   };
 
   if (selectedSeries) {
@@ -320,8 +312,6 @@ export default function PopularGrid({
             <button
               key={`${ep.season || 1}-${ep.episodeNumber}-${idx}`}
               onClick={() => {
-                if (!user) { onRequireAuth?.(); return; }
-                if (!hasActiveSubscription && !isAdmin) { onShowSubscription(); return; }
                 navigate(`/play/${selectedSeries.id}?type=series&ep=${ep.episodeNumber}&season=${ep.season || 1}`);
               }}
               className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg hover:border-primary transition text-left"
@@ -372,7 +362,7 @@ export default function PopularGrid({
     <div className="mb-4 pb-16 md:pb-0 space-y-6">
       {/* Recently Added */}
       {recentlyAdded.length > 0 && (
-        <section>
+        <section className="catalog-recent">
           <h2 className="text-sm font-bold text-foreground mb-3">🆕 Recently Added</h2>
           <ContentGrid
             items={recentlyAdded}
@@ -436,8 +426,6 @@ export default function PopularGrid({
                   <button
                     key={`${series.id}-s${ep.season || 1}-e${ep.episodeNumber}-${idx}`}
                     onClick={() => {
-                      if (!user) { onRequireAuth?.(); return; }
-                      if (!hasActiveSubscription && !isAdmin) { onShowSubscription(); return; }
                       navigate(`/play/${series.id}?type=series&ep=${ep.episodeNumber}&season=${ep.season || 1}`);
                     }}
                     className="flex-shrink-0 w-[100px] md:w-[120px] flex flex-col items-center group focus:outline-none"
@@ -460,13 +448,11 @@ export default function PopularGrid({
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 md:gap-2.5 w-full overflow-hidden">
+              <div className="catalog-grid w-full">
                 {allEps.map(({ series, ep }, idx) => (
                   <button
                     key={`${series.id}-s${ep.season || 1}-e${ep.episodeNumber}-${idx}`}
                     onClick={() => {
-                      if (!user) { onRequireAuth?.(); return; }
-                      if (!hasActiveSubscription && !isAdmin) { onShowSubscription(); return; }
                       navigate(`/play/${series.id}?type=series&ep=${ep.episodeNumber}&season=${ep.season || 1}`);
                     }}
                     className="flex flex-col items-center group focus:outline-none"
@@ -496,7 +482,7 @@ export default function PopularGrid({
 
       {/* Popular */}
       <section>
-        <h2 className="text-sm font-bold text-foreground mb-3">🔥 Popular on LUO CINEMA</h2>
+        <h2 className="text-sm font-bold text-foreground mb-3">🔥 Popular on DIMPOZ MOVIES</h2>
         {filteredMovies.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground text-sm">No content found</p>
@@ -548,7 +534,7 @@ interface ContentGridProps {
 function ContentGrid({ items, onPosterClick, onSelectSeries, showDateBadge, trendingIds }: ContentGridProps) {
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 md:gap-2.5 w-full overflow-hidden">
+    <div className="catalog-grid w-full">
       {items.map((movie) => {
         const badge = showDateBadge ? getDateBadge(movie.createdAt) : null;
         return (

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import TopHeader from "@/components/TopHeader";
@@ -37,14 +38,18 @@ const Index = () => {
 
       <div className="flex-1 md:ml-[72px] flex flex-col min-w-0 overflow-x-hidden">
         <TopHeader
+          onFilterChange={handleFilterChange}
+          activeFilter={activeFilter}
           onSearch={(q) => {
             setSearchQuery(q);
             setActiveFilter("search");
           }}
         />
 
-        <main className="flex-1 pt-14 px-3 md:px-5 lg:px-6 overflow-x-hidden">
-          <EasterBanner />
+        <main className="flex-1 pt-14 px-2 md:px-4 lg:px-5 overflow-x-hidden">
+          <nav className="md:hidden flex gap-2 overflow-x-auto scrollbar-hide py-2" aria-label="Mobile categories">
+            {[["home", "Home"], ["movies", "Movies"], ["series", "Series"], ["anime", "Anime"], ["music", "Music"], ["top-rated", "Top Rated"]].map(([filter, label]) => <Button key={filter} size="sm" variant={activeFilter === filter ? "default" : "secondary"} className="shrink-0 h-7 rounded-full text-[11px] px-3" onClick={() => handleFilterChange(filter)}>{label}</Button>)}
+          </nav>
           {activeFilter === "home" && (
             <div className="space-y-3">
               <HeroCarousel />
@@ -57,14 +62,15 @@ const Index = () => {
               </a>
               <Link
                 to="/agent"
-                className="relative flex items-center justify-between gap-2 w-full py-3 px-4 rounded-xl text-sm font-bold border border-amber-400/60 bg-gradient-to-r from-amber-500/25 via-amber-600/15 to-orange-600/20 text-amber-200 hover:brightness-110 transition agent-glow"
+                className="relative flex items-center justify-between gap-2 w-full py-3 px-4 rounded-xl text-sm font-bold border border-agent/50 bg-agent/10 text-foreground hover:bg-agent/20 transition"
               >
                 <span className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <Sparkles className="w-4 h-4 text-agent" />
                   Agent Zone — new titles first
                 </span>
-                <span className="text-xs font-bold text-amber-300">Open →</span>
+                <span className="text-xs font-bold text-agent">Open →</span>
               </Link>
+              <EasterBanner />
               <SubscriberStatusBanner onUpgrade={() => setShowSubscriptionModal(true)} />
               <CategoriesRow
                 onSelectCategory={setCategoryFilter}

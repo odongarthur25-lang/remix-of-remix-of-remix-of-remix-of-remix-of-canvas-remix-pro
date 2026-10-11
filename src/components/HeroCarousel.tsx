@@ -140,8 +140,8 @@ export default function HeroCarousel() {
 
   return (
     <div
-      className="relative w-full mb-3 rounded-lg overflow-hidden group max-w-full"
-      style={{ aspectRatio: "16/9", minHeight: 140, maxHeight: "40vh", perspective: "1000px" }}
+      className="catalog-hero relative w-full mb-2 rounded-lg overflow-hidden group max-w-full"
+      style={{ perspective: "1000px" }}
     >
       {items.map((item, i) => (
         <div key={item.id} style={getTransitionStyle(transition, i === currentIndex)}>
@@ -152,11 +152,11 @@ export default function HeroCarousel() {
           />
           {i === currentIndex && (
             <div className="absolute bottom-0 left-0 right-0 p-3 md:p-5">
-              <h2 className="text-base md:text-xl font-bold text-foreground drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+              <h2 className="text-base md:text-xl font-bold text-media-foreground drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                 {item.title}
               </h2>
               {item.subtitle && (
-                <p className="text-xs md:text-sm text-foreground/80 mt-0.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+                <p className="text-xs md:text-sm text-media-foreground/80 mt-0.5 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
                   {item.subtitle}
                 </p>
               )}

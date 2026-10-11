@@ -1,4 +1,7 @@
 import { Home, Film, Tv, Music, Star, CreditCard, Shield, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/use-theme";
+import { Sun, Moon } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useNavigate } from "react-router-dom";
 
@@ -19,6 +22,7 @@ const navItems = [
 ];
 
 export default function Sidebar({ onFilterChange, activeFilter, onShowSubscription }: SidebarProps) {
+  const { theme, toggleTheme } = useTheme();
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
@@ -29,23 +33,16 @@ export default function Sidebar({ onFilterChange, activeFilter, onShowSubscripti
   };
 
   return (
-    <div
-      className="fixed left-0 top-0 h-full w-[72px] flex-col items-center py-4 z-40 hidden md:flex"
-      style={{
-        background: "hsl(var(--sidebar-background) / 0.95)",
-        backdropFilter: "blur(20px)",
-        borderRight: "1px solid hsl(var(--sidebar-border) / 0.5)",
-      }}
-    >
+    <div className="fixed left-0 top-0 h-full w-[72px] flex-col items-center py-4 z-40 hidden md:flex bg-sidebar border-r border-sidebar-border">
       {/* Logo */}
       <div className="mb-6 mt-1">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-[hsl(0_30%_25%)] flex items-center justify-center shadow-lg shadow-primary/20 relative">
+        <div className="w-10 h-10 rounded-full bg-card flex items-center justify-center shadow-lg shadow-primary/20 relative">
           <img
             src="https://i.postimg.cc/Fs2nssw-m/logo.png"
             alt="Logo"
             className="w-6 h-6"
           />
-          <span className="absolute -top-1 -right-1 text-xs sky-pulse">💖</span>
+
         </div>
       </div>
 
@@ -55,10 +52,10 @@ export default function Sidebar({ onFilterChange, activeFilter, onShowSubscripti
           const Icon = item.icon;
           const isActive = activeFilter === item.filter;
           return (
-            <button
+            <Button variant="ghost"
               key={item.filter}
               onClick={() => handleClick(item.filter)}
-              className="group relative flex flex-col items-center gap-0.5 py-2 w-full rounded-xl transition-all duration-200"
+              className="group relative flex flex-col items-center gap-0.5 py-2 px-2 h-12 w-full rounded-lg transition-all duration-200"
               style={
                 isActive
                   ? { background: "hsl(var(--primary) / 0.12)" }
@@ -83,24 +80,25 @@ export default function Sidebar({ onFilterChange, activeFilter, onShowSubscripti
               }`}>
                 {item.label}
               </span>
-            </button>
+            </Button>
           );
         })}
 
         {isAdmin && (
           <>
             <div className="w-8 h-px bg-border/30 my-1" />
-            <button
+            <Button variant="ghost"
               onClick={() => navigate("/admin")}
-              className="group flex flex-col items-center gap-0.5 py-2 w-full rounded-xl transition-all duration-200"
+              className="group flex flex-col items-center gap-0.5 py-2 px-2 h-12 w-full rounded-lg transition-all duration-200"
               title="Admin"
             >
               <Shield className="w-[18px] h-[18px] text-muted-foreground group-hover:text-accent transition-colors" strokeWidth={1.6} />
               <span className="text-[8px] font-semibold text-muted-foreground group-hover:text-accent transition-colors">Admin</span>
-            </button>
+            </Button>
           </>
         )}
       </nav>
+      <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>{theme === "dark" ? <Sun /> : <Moon />}</Button>
     </div>
   );
 }
