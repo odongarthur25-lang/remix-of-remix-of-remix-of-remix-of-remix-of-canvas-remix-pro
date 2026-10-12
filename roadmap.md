@@ -3,3 +3,4 @@
 - [x] Link notification pop-ups and bell entries to titles and specific episodes.
 - [x] Open watch pages for everyone and lock playback until subscription activation; test access rules.
 - [x] Verify interactions and apply required package update.
+- [x] Restore full-width Daily Wisdom banner, 3-in-a-row mobile posters, silent auto sign-in, promo ad screen, Continue Watching and Top Rated homepage rows.
