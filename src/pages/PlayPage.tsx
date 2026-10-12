@@ -7,6 +7,7 @@ import { useSubscription } from "@/lib/subscription-context";
 import { Star, Download, Share2, ArrowLeft, Play, Loader2, X, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { canDownload, recordDownload, getLimitInfo } from "@/lib/download-limits";
+import { recordContinueWatching } from "@/lib/continue-watching";
 
 interface Episode {
   episodeNumber: number;
@@ -50,8 +51,10 @@ export default function PlayPage() {
   const epNum = searchParams.get("ep");
   const { user, isAdmin } = useAuth();
   const { hasActiveSubscription, currentPlanId, subscription, isAgentSubscriber } = useSubscription();
+  // Automatic anonymous sign-in does not count as a real account
+  const signedOut = !user || user.isAnonymous;
   // Everyone can open the watch page; playback stays locked until activation
-  const playbackLocked = !user || (!hasActiveSubscription && !isAdmin);
+  const playbackLocked = signedOut || (!hasActiveSubscription && !isAdmin);
 
   const [content, setContent] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,6 +107,20 @@ export default function PlayPage() {
 
     fetchContent();
   }, [id, type, user?.uid, navigate]);
+
+  // Remember what the visitor opened so the homepage can show Continue Watching
+  useEffect(() => {
+    if (!content) return;
+    recordContinueWatching({
+      id: content.id,
+      type,
+      title: content.title,
+      image: content.image,
+      season: type === "series" ? currentSeason : undefined,
+      ep: type === "series" ? currentEpisode : undefined,
+      ts: Date.now(),
+    });
+  }, [content, type, currentSeason, currentEpisode]);
 
   const fetchRelated = async (currentContent: ContentData) => {
     try {
@@ -286,17 +303,17 @@ export default function PlayPage() {
           {playbackLocked ? (
             <div className="relative w-full bg-card flex flex-col items-center justify-center text-center gap-3 px-6" style={{ aspectRatio: "16/9", maxHeight: "70vh" }}>
               <Lock className="w-10 h-10 text-primary" />
-              <h2 className="text-foreground font-bold text-base">{user ? "Subscription required" : "Sign in to watch"}</h2>
+              <h2 className="text-foreground font-bold text-base">{signedOut ? "Sign in to watch" : "Subscription required"}</h2>
               <p className="text-muted-foreground text-sm max-w-sm">
-                {user
-                  ? `Activate a subscription to unlock ${content.title} and start watching.`
-                  : `Sign in or create an account to watch ${content.title}.`}
+                {signedOut
+                  ? `Sign in or create an account to watch ${content.title}.`
+                  : `Activate a subscription to unlock ${content.title} and start watching.`}
               </p>
               <button
-                onClick={() => navigate(user ? "/subscribe" : "/login")}
+                onClick={() => navigate(signedOut ? "/login" : "/subscribe")}
                 className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-medium transition"
               >
-                {user ? "Choose a plan" : "Sign in / Sign up"}
+                {signedOut ? "Sign in / Sign up" : "Choose a plan"}
               </button>
             </div>
           ) : episodeLocked ? (

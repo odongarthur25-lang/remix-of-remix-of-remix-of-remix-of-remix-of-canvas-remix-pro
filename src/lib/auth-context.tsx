@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, type User } from "firebase/auth";
+import { onAuthStateChanged, signInAnonymously, type User } from "firebase/auth";
 import { auth, database } from "./firebase";
 import { ref as dbRef, set, get } from "firebase/database";
 
@@ -22,6 +22,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      // Automatic login: signed-out visitors are signed in silently
+      // (anonymously) — no login pop-up. If anonymous auth is not enabled
+      // on the Firebase project, this fails quietly and the app works as a guest.
+      if (!currentUser) {
+        signInAnonymously(auth).catch(() => {});
+      }
       setUser(currentUser);
 
       if (currentUser?.email) {
@@ -91,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
 
-      if (currentUser) {
+      if (currentUser && !currentUser.isAnonymous) {
         try {
           const userRef = dbRef(database, `users/${currentUser.uid}`);
           const snapshot = await get(userRef);

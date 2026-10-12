@@ -73,10 +73,22 @@ export default function EasterBanner() {
   }, []);
 
   return (
-    <aside className="max-w-lg mx-auto my-2 rounded-lg border border-border bg-card px-3 py-2 text-center">
-      <p className="text-[9px] font-extrabold text-accent mb-1">DAILY WISDOM</p>
-      <p className="text-[11px] font-bold leading-snug text-foreground">“{quote.text}”</p>
-      <p className="text-[9px] font-bold text-muted-foreground mt-1">— {quote.author}</p>
-    </aside>
+    <div
+      className="w-full py-2.5 px-4 text-center text-xs font-semibold tracking-wider z-50 relative overflow-hidden sky-glow rounded-lg my-2"
+      style={{
+        background: "linear-gradient(90deg, hsl(200 85% 55% / 0.12), hsl(190 75% 50% / 0.18), hsl(210 80% 60% / 0.12))",
+        borderBottom: "1px solid hsl(200 80% 55% / 0.3)",
+        color: "hsl(200 85% 72%)",
+        letterSpacing: "0.08em",
+      }}
+    >
+      <span className="relative z-10 flex flex-col items-center gap-0.5">
+        <span className="text-[10px] opacity-60 uppercase tracking-widest">💖 Daily Wisdom</span>
+        <span className="italic text-xs md:text-sm font-medium leading-relaxed">
+          "{quote.text}"
+        </span>
+        <span className="text-[10px] opacity-70 font-semibold">— {quote.author}</span>
+      </span>
+    </div>
   );
 }
