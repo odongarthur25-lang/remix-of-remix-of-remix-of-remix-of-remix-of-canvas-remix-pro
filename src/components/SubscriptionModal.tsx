@@ -291,8 +291,13 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 <X className="w-6 h-6 text-destructive" />
               </div>
             </div>
-            <h2 className="text-lg font-extrabold text-white mb-1">Payment Failed</h2>
-            <p className="text-white/60 text-xs mb-5">{statusMsg}</p>
+            <h2 className="text-lg font-extrabold text-white mb-2">Payment Failed</h2>
+            {statusMsg && (
+              <div className="mb-5 rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 text-left">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-destructive mb-1">Error</p>
+                <p className="text-white text-xs break-words">{statusMsg}</p>
+              </div>
+            )}
             <button onClick={() => setStep("plans")} className="px-8 py-2.5 bg-primary rounded-xl text-primary-foreground text-sm font-bold shadow-md hover:opacity-90 transition">
               Try Again
             </button>
