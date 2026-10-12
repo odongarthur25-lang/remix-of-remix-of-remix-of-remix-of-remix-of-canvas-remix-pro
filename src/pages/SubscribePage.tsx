@@ -100,7 +100,14 @@ export default function SubscribePage() {
         setStatusMsg("Payment prompt sent! Waiting for confirmation...");
         startPolling();
       } else {
-        setStatusMsg(result?.message || "Failed to initiate payment.");
+        const detailMsg =
+          result?.details?.message ||
+          result?.message ||
+          result?.relworx?.message ||
+          result?.error ||
+          "Failed to initiate payment. Please try again.";
+        const code = result?.details?.error_code ? ` (${result.details.error_code})` : "";
+        setStatusMsg(`${detailMsg}${code}`);
         setStep("failed");
       }
     } catch (err: any) {
@@ -125,7 +132,9 @@ export default function SubscribePage() {
           setStep("success");
         } else if (status === "failed" || status === "cancelled") {
           stopPolling();
-          setStatusMsg(res.message || "Payment failed.");
+          const failMsg =
+            res.message || res.relworx?.message || res.details?.message || "Payment failed or was declined.";
+          setStatusMsg(failMsg);
           setStep("failed");
         } else {
           setStatusMsg(`Waiting for payment confirmation... (${attempts})`);
