@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { database } from "@/lib/firebase";
 import { ref, onValue, get, runTransaction } from "firebase/database";
+import { getContinueWatching, type ContinueWatchingEntry } from "@/lib/continue-watching";
 import { ChevronRight, Flame } from "lucide-react";
 import { Play, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -60,6 +61,7 @@ export default function PopularGrid({
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [showAllEpisodes, setShowAllEpisodes] = useState(false);
   const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
+  const [continueWatching, setContinueWatching] = useState<ContinueWatchingEntry[]>([]);
 
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
@@ -71,6 +73,11 @@ export default function PopularGrid({
     });
     return () => unsub();
   }, []);
+
+  // Resume list: refreshed whenever the home view is shown again
+  useEffect(() => {
+    setContinueWatching(getContinueWatching());
+  }, [activeFilter, searchQuery]);
 
   const trendingIds = useMemo(() => {
     const entries = Object.entries(viewCounts).filter(([, c]) => (c || 0) >= 3);
@@ -360,6 +367,34 @@ export default function PopularGrid({
   // Home view: Recently Added + Latest Episodes + Popular
   return (
     <div className="mb-4 pb-16 md:pb-0 space-y-6">
+      {/* Continue Watching */}
+      {continueWatching.length > 0 && (
+        <section>
+          <h2 className="text-sm font-bold text-foreground mb-3">⏯️ Continue Watching</h2>
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {continueWatching.slice(0, 12).map((e) => (
+              <button
+                key={`${e.id}-${e.season || ""}-${e.ep || ""}`}
+                onClick={() => navigate(`/play/${e.id}?type=${e.type}${e.type === "series" ? `&season=${e.season || 1}&ep=${e.ep || 1}` : ""}`)}
+                className="flex-shrink-0 w-[110px] md:w-[130px] flex flex-col items-center group focus:outline-none"
+              >
+                <div className="relative bg-card w-full hover:scale-105 transition-all duration-200 border-2 border-transparent rounded-lg overflow-hidden group-focus:border-primary group-active:border-primary hover:border-[hsl(var(--glow))] hover:shadow-[0_0_12px_hsl(var(--glow)/0.4)]">
+                  <div className="relative w-full" style={{ aspectRatio: "2/3" }}>
+                    <div className="absolute inset-0 bg-secondary" />
+                    <img src={e.image || "/placeholder.svg"} alt={e.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-media-overlay/80 via-transparent to-transparent" />
+                    <div className="absolute top-1 right-1 px-2 py-1 bg-primary/90 backdrop-blur-sm text-primary-foreground text-[9px] md:text-[10px] font-bold rounded-md shadow-lg">
+                      {e.type === "series" ? `S${e.season || 1} E${e.ep || 1}` : "Resume"}
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-1 text-foreground text-[9px] md:text-[10px] font-bold text-center line-clamp-2 leading-tight w-full px-0.5">{e.title}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Recently Added */}
       {recentlyAdded.length > 0 && (
         <section className="catalog-recent">
@@ -476,6 +511,31 @@ export default function PopularGrid({
                 ))}
               </div>
             )}
+          </section>
+        );
+      })()}
+
+      {/* Top Rated */}
+      {(() => {
+        const topRated = [...filteredMovies]
+          .filter((m) => (m.rating || 0) >= 4)
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .slice(0, 12);
+        if (topRated.length === 0) return null;
+        return (
+          <section>
+            <h2 className="text-sm font-bold text-foreground mb-3">⭐ Top Rated</h2>
+            <ContentGrid
+              items={topRated}
+              onPosterClick={handlePosterClick}
+              onSelectSeries={setSelectedSeries}
+              user={user}
+              onRequireAuth={onRequireAuth}
+              onShowSubscription={onShowSubscription}
+              hasActiveSubscription={hasActiveSubscription}
+              isAdmin={isAdmin}
+              trendingIds={trendingIds}
+            />
           </section>
         );
       })()}
