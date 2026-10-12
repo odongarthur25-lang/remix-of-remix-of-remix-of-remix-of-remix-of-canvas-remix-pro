@@ -27,6 +27,7 @@ import AdminAgentContentPage from "./pages/AdminAgentContentPage";
 import AdminPaymentBackendPage from "./pages/AdminPaymentBackendPage";
 import AgentPage from "./pages/AgentPage";
 import RouteTracker from "./components/RouteTracker";
+import ThemeSync from "./components/ThemeSync";
 import PhoneNumberGate from "./components/PhoneNumberGate";
 
 

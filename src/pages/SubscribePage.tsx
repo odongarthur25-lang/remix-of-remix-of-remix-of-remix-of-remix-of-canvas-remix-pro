@@ -100,7 +100,14 @@ export default function SubscribePage() {
         setStatusMsg("Payment prompt sent! Waiting for confirmation...");
         startPolling();
       } else {
-        setStatusMsg(result?.message || "Failed to initiate payment.");
+        const detailMsg =
+          result?.details?.message ||
+          result?.message ||
+          result?.relworx?.message ||
+          result?.error ||
+          "Failed to initiate payment. Please try again.";
+        const code = result?.details?.error_code ? ` (${result.details.error_code})` : "";
+        setStatusMsg(`${detailMsg}${code}`);
         setStep("failed");
       }
     } catch (err: any) {
@@ -125,7 +132,9 @@ export default function SubscribePage() {
           setStep("success");
         } else if (status === "failed" || status === "cancelled") {
           stopPolling();
-          setStatusMsg(res.message || "Payment failed.");
+          const failMsg =
+            res.message || res.relworx?.message || res.details?.message || "Payment failed or was declined.";
+          setStatusMsg(failMsg);
           setStep("failed");
         } else {
           setStatusMsg(`Waiting for payment confirmation... (${attempts})`);
@@ -348,8 +357,13 @@ export default function SubscribePage() {
             <div className="w-16 h-16 rounded-full bg-destructive/15 flex items-center justify-center mx-auto mb-4">
               <X className="w-6 h-6 text-destructive" />
             </div>
-            <h2 className="text-lg font-extrabold text-white mb-1">Payment Failed</h2>
-            <p className="text-white/60 text-xs mb-5">{statusMsg}</p>
+            <h2 className="text-lg font-extrabold text-white mb-2">Payment Failed</h2>
+            {statusMsg && (
+              <div className="mb-5 rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 text-left">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-destructive mb-1">Error</p>
+                <p className="text-white text-xs break-words">{statusMsg}</p>
+              </div>
+            )}
             <button
               onClick={() => (agentMode ? setStep("phone") : backToStart())}
               className={`px-8 py-2.5 rounded-xl text-sm font-bold shadow-md transition ${
