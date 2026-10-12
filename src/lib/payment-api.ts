@@ -60,6 +60,37 @@ export async function resetPaymentApiBase() {
   return DEFAULT_API_BASE;
 }
 
+/**
+ * Parse a payment-server response. On a non-OK HTTP status, surface the
+ * server's own error message (e.g. "Invalid access for IP ..." / INVALID_IP)
+ * so the failed screen can show the real reason instead of a generic one.
+ */
+async function parsePaymentResponse(res: Response) {
+  const text = await res.text().catch(() => "");
+  let data: any = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text.slice(0, 300) };
+    }
+  }
+  if (!res.ok) {
+    const serverMsg =
+      data?.details?.message ||
+      data?.message ||
+      data?.relworx?.message ||
+      data?.error ||
+      data?.error_code ||
+      (typeof data === "string" ? data : "");
+    const statusTxt = `HTTP ${res.status}${res.statusText ? ` ${res.statusText}` : ""}`;
+    throw new Error(
+      serverMsg ? `${serverMsg} (${statusTxt})` : `Payment server error (${statusTxt})`,
+    );
+  }
+  return data ?? {};
+}
+
 export async function requestPayment(msisdn: string, amount: number, description: string) {
   const API_BASE = await getApiBase();
   const res = await fetch(`${API_BASE}/deposit`, {
@@ -67,7 +98,7 @@ export async function requestPayment(msisdn: string, amount: number, description
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ msisdn, amount, description }),
   });
-  return res.json();
+  return parsePaymentResponse(res);
 }
 
 export async function sendPayment(msisdn: string, amount: number, description: string) {
@@ -77,7 +108,7 @@ export async function sendPayment(msisdn: string, amount: number, description: s
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ msisdn, amount, description }),
   });
-  return res.json();
+  return parsePaymentResponse(res);
 }
 
 export async function checkRequestStatus(internalReference: string) {
@@ -85,19 +116,19 @@ export async function checkRequestStatus(internalReference: string) {
   const res = await fetch(
     `${API_BASE}/request-status?internal_reference=${encodeURIComponent(internalReference)}`,
   );
-  return res.json();
+  return parsePaymentResponse(res);
 }
 
 export async function getWalletBalance() {
   const API_BASE = await getApiBase();
   const res = await fetch(`${API_BASE}/wallet/balance`);
-  return res.json();
+  return parsePaymentResponse(res);
 }
 
 export async function getTransactions() {
   const API_BASE = await getApiBase();
   const res = await fetch(`${API_BASE}/transactions`);
-  return res.json();
+  return parsePaymentResponse(res);
 }
 
 export async function validatePhone(msisdn: string) {
@@ -107,5 +138,5 @@ export async function validatePhone(msisdn: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ msisdn }),
   });
-  return res.json();
+  return parsePaymentResponse(res);
 }
